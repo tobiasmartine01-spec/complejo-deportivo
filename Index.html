@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva de Canchas | Mi Complejo Deportivo</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-container">
+            <img src="https://i.ibb.co/L5T199s/logo-deportivo.png" alt="Logo del Complejo" class="logo">
+            <h1>Mi Complejo Deportivo</h1>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="booking-section">
+            <h2>Reserva tu Cancha</h2>
+
+            <div class="filters">
+                <div class="sport-selector">
+                    <button id="futbol-btn" class="sport-button active" data-sport="futbol">Fútbol 5</button>
+                    <button id="padel-btn" class="sport-button" data-sport="padel">Pádel</button>
+                </div>
+            </div>
+
+            <div class="calendar-and-times">
+                <div class="calendar-card card">
+                    <h3>Selecciona una fecha</h3>
+                    <input type="date" id="date-picker">
+                </div>
+           
+                <div class="times-card card">
+                    <h3>Horarios disponibles</h3>
+                    <ul id="available-times" class="time-list"></ul>
+                    <p id="no-times-message" class="hidden">No hay horarios disponibles para esta fecha.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <p>&copy; 2025 Mi Complejo Deportivo. Todos los derechos reservados.</p>
+            <div class="social-media">
+                <a href="#">Facebook</a>
+                <a href="#">Instagram</a>
+                <a href="#">WhatsApp</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyCLXor6Sa5mxnwRx0buqbBdYSei9b2OVM0C4bwYvhdo1l9em7p43rcql2Qzy7gaqmOBg/exec'; // Reemplaza con tu URL
+
+        const saveToSheets = (data) => {
+            fetch(SHEETS_URL, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.result === 'success') {
+                    alert('¡Reserva confirmada con éxito! Los datos han sido guardados.');
+                } else {
+                    alert('Error al guardar datos. Por favor, inténtelo de nuevo.');
+                }
+            })
+            .catch(error => {
+                console.error('Error de red:', error);
+                alert('Error al conectar con el servidor. Por favor, inténtelo de nuevo.');
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const futbolBtn = document.getElementById('futbol-btn');
+            const padelBtn = document.getElementById('padel-btn');
+            const datePicker = document.getElementById('date-picker');
+            const availableTimesList = document.getElementById('available-times');
+            const noTimesMessage = document.getElementById('no-times-message');
+
+            let currentSport = 'futbol';
+            let availableSlots = {};
+            let selectedDate = '';
+
+            const generateTimes = (sport) => {
+                availableSlots = {};
+                const today = new Date();
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(today);
+                    date.setDate(today.getDate() + i);
+                    const dateKey = date.toISOString().slice(0, 10);
+                    availableSlots[dateKey] = [];
+                    const startHour = sport === 'futbol' ? 9 : 10;
+                    const endHour = 22;
+                    for (let hour = startHour; hour < endHour; hour++) {
+                        availableSlots[dateKey].push(`${hour}:00 - ${hour + 1}:00`);
+                    }
+                }
+            };
+
+            const displayTimesForDate = (date) => {
+                availableTimesList.innerHTML = '';
+                const times = availableSlots[date];
+                if (times && times.length > 0) {
+                    noTimesMessage.classList.add('hidden');
+                    times.forEach(time => {
+                        const li = document.createElement('li');
+                        li.className = 'time-item';
+                        li.innerHTML = `
+                            <span class="time-slot">${time}</span>
+                            <button class="reserve-button ${currentSport === 'padel' ? 'padel' : ''}" data-time="${time}">Reservar</button>
+                        `;
+                        availableTimesList.appendChild(li);
+                    });
+                } else {
+                    noTimesMessage.classList.remove('hidden');
+                }
+            };
+
+            futbolBtn.addEventListener('click', () => {
+                futbolBtn.classList.add('active');
+                padelBtn.classList.remove('active');
+                currentSport = 'futbol';
+                generateTimes(currentSport);
+                displayTimesForDate(datePicker.value);
+            });
+
+            padelBtn.addEventListener('click', () => {
+                padelBtn.classList.add('active');
+                futbolBtn.classList.remove('active');
+                currentSport = 'padel';
+                generateTimes(currentSport);
+                displayTimesForDate(datePicker.value);
+            });
+
+            datePicker.addEventListener('change', (e) => {
+                selectedDate = e.target.value;
+                displayTimesForDate(selectedDate);
+            });
+
+            availableTimesList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('reserve-button')) {
+                    const selectedTimeSlot = e.target.dataset.time;
+                    
+                    // Llama directamente a la función para guardar en Sheets
+                    saveToSheets({
+                        fecha: selectedDate,
+                        hora: selectedTimeSlot,
+                        deporte: currentSport,
+                        nombre: 'Cliente', // Datos de ejemplo, ya que no hay formulario
+                        email: 'cliente@ejemplo.com',
+                        telefono: '123456789'
+                    });
+                }
+            });
+
+            generateTimes(currentSport);
+            datePicker.value = new Date().toISOString().slice(0, 10);
+            selectedDate = datePicker.value;
+            displayTimesForDate(selectedDate);
+        });
+    </script>
+</body>
+</html>
