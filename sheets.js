@@ -27,4 +27,5 @@ const saveToSheets = (data) => {
     console.error('Error de red:', error);
     alert('Error al conectar con el servidor. Por favor, inténtelo de nuevo.');
   });
+
 };
