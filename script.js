@@ -67,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     datePicker.addEventListener('change', (e) => {
-        // La corrección está aquí:
         selectedDate = e.target.value;
         displayTimesForDate(selectedDate);
     });
@@ -94,8 +93,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const email = document.getElementById('email').value;
         const phone = document.getElementById('phone').value;
 
-        // ¡Asegúrate de pegar tu URL aquí!
-        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyCLXor6Sa5mxnwRx0buqbBdYSei9b2OVM0C4bwYvhdo1l9em7p43rcql2Qzy7gaqmOBg/exec'; 
+        // ¡Aquí debes pegar la URL de tu aplicación web de Google Apps Script!
+        const SHEETS_URL = 'pega_la_url_de_tu_aplicacion_web_aqui'; 
 
         const data = {
             fecha: selectedDate,
@@ -140,5 +139,4 @@ document.addEventListener('DOMContentLoaded', () => {
     generateTimes(currentSport);
     datePicker.value = new Date().toISOString().slice(0, 10);
     displayTimesForDate(datePicker.value);
-
 });
